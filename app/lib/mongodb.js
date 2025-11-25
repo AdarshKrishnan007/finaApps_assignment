@@ -7,36 +7,27 @@ if (!MONGODB_URI) {
   throw new Error("Please add MONGODB_URI to environment variables");
 }
 
-let isConnected = false; // Track connection status
+let isConnected = false;
 
 export async function connectDB() {
-  if (isConnected) {
-    console.log("MongoDB is already connected");
-    return;
-  }
+  if (isConnected) return;
 
-  // In development, use a global variable to preserve the connection across hot reloads
+  // Use global variable in development to prevent multiple connections
   if (process.env.NODE_ENV === "development") {
-    if (!global._mongoose) {
-      global._mongoose = { conn: null, promise: null };
-    }
+    if (!global._mongoose) global._mongoose = { conn: null, promise: null };
 
     if (!global._mongoose.promise) {
-      global._mongoose.promise = mongoose
-        .connect(MONGODB_URI)
-        .then((mongooseInstance) => {
-          global._mongoose.conn = mongooseInstance;
-          return mongooseInstance;
-        });
+      global._mongoose.promise = mongoose.connect(MONGODB_URI).then((conn) => {
+        global._mongoose.conn = conn;
+        return conn;
+      });
     }
 
     await global._mongoose.promise;
     isConnected = true;
   } else {
-    // In production, create a new connection per serverless function invocation
+    // Production (serverless) - connect per invocation
     await mongoose.connect(MONGODB_URI);
     isConnected = true;
   }
-
-  console.log("MongoDB connected");
 }
