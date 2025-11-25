@@ -4,14 +4,11 @@ import Product from "../../../models/Product";
 export async function GET() {
   await connectDB();
 
-  // 1️⃣ Fetch FakeStore products
   const fakeStoreRes = await fetch("https://fakestoreapi.com/products");
   const fakeStoreProducts = await fakeStoreRes.json();
 
-  // 2️⃣ Fetch MongoDB products
   const dbProducts = await Product.find();
 
-  // 3️⃣ Merge both lists
   const combinedProducts = [
     ...fakeStoreProducts.map((p) => ({
       title: p.title,
